@@ -5,6 +5,7 @@ import org.example.controller.UserController;
 import org.reflections.ReflectionUtils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class BeanFactory  {
@@ -34,10 +35,11 @@ public class BeanFactory  {
             parameters.add(getParameterByClass(typeClass));
         }
 
-    }
-
-    private Object getParameterByClass(Class<?> typeClass) {
-        return null;
+        try {
+            return constructor.newInstance(parameters.toArray());
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Constructor<?> findConstructor(Class<?> clazz) {
@@ -48,6 +50,16 @@ public class BeanFactory  {
         }
 
         return clazz.getConstructors()[0];
+    }
+
+    private Object getParameterByClass(Class<?> typeClass) {
+        Object instanceBean = getBean(typeClass);
+
+        if (Objects.nonNull(instanceBean)) {
+            return instanceBean;
+        }
+
+        return createInstances(typeClass);
     }
 
     public <T> T getBean(Class<T> requiredType) {
